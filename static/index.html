@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仿真进程控制面板</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(to bottom right, #f3f4f6, #e5e7eb);
+            min-height: 100vh;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        
+        /* 容器样式 */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* 标题样式 */
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 1rem;
+        }
+        
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 1rem;
+        }
+        
+        h3 {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #4b5563;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* 状态指示器 */
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-stopped { background-color: #ef4444; }
+        .status-running { background-color: #10b981; }
+        .status-paused { background-color: #f59e0b; }
+        
+        /* 按钮样式 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+        }
+        
+        .btn i {
+            margin-right: 0.5rem;
+        }
+        
+        .btn .icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 0.5rem;
+            display: inline-block;
+        }
+        
+        /* 纯CSS图标 */
+        .icon-play {
+            width: 0;
+            height: 0;
+            border-left: 8px solid currentColor;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+        }
+        
+        .icon-pause {
+            width: 10px;
+            height: 12px;
+            border-left: 3px solid currentColor;
+            border-right: 3px solid currentColor;
+        }
+        
+        .icon-resume {
+            width: 0;
+            height: 0;
+            border-left: 8px solid currentColor;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            position: relative;
+        }
+        
+        .icon-resume::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: -3px;
+            width: 10px;
+            height: 6px;
+            border: 3px solid currentColor;
+            border-radius: 3px;
+        }
+        
+        .icon-stop {
+            width: 12px;
+            height: 12px;
+            background-color: currentColor;
+        }
+        
+        .icon-refresh {
+            width: 16px;
+            height: 16px;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            position: relative;
+        }
+        
+        .icon-refresh::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            right: 3px;
+            width: 6px;
+            height: 2px;
+            background-color: currentColor;
+            transform: rotate(-45deg);
+        }
+        
+        .icon-trash {
+            width: 12px;
+            height: 14px;
+            position: relative;
+            background-color: currentColor;
+            border-radius: 2px;
+        }
+        
+        .icon-trash::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: -2px;
+            width: 16px;
+            height: 3px;
+            background-color: currentColor;
+        }
+        
+        /* 改进的图标设计 */
+        .icon-rocket {
+            width: 20px;
+            height: 20px;
+            position: relative;
+            transform: rotate(-45deg);
+        }
+        
+        .icon-rocket::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 6px;
+            height: 16px;
+            background: currentColor;
+            transform: translate(-50%, -80%);
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .icon-rocket::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 6px;
+            background: currentColor;
+            transform: translate(-50%, -20%);
+            border-radius: 0 0 3px 3px;
+        }
+        
+        .icon-rocket span {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            background: currentColor;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+        }
+        
+        .icon-file {
+            width: 16px;
+            height: 18px;
+            position: relative;
+            background: currentColor;
+            border-radius: 2px;
+        }
+        
+        .icon-file::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 5px solid currentColor;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        /* 按钮颜色 */
+        .btn-green {
+            background-color: #10b981;
+            color: white;
+        }
+        
+        .btn-green:hover {
+            background-color: #059669;
+        }
+        
+        .btn-yellow {
+            background-color: #f59e0b;
+            color: white;
+        }
+        
+        .btn-yellow:hover {
+            background-color: #d97706;
+        }
+        
+        .btn-blue {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        .btn-blue:hover {
+            background-color: #2563eb;
+        }
+        
+        .btn-red {
+            background-color: #ef4444;
+            color: white;
+        }
+        
+        .btn-red:hover {
+            background-color: #dc2626;
+        }
+        
+        /* 信息卡片 */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .info-card {
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+        
+        .info-card-blue {
+            background-color: #eff6ff;
+        }
+        
+        .info-card-green {
+            background-color: #ecfdf5;
+        }
+        
+        .info-card-purple {
+            background-color: #faf5ff;
+        }
+        
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111827;
+        }
+        
+        /* 控制按钮容器 */
+        .control-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        
+        /* 网格布局 */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        @media (min-width: 768px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* 日志和数据容器 */
+        .log-container,
+        .data-container {
+            max-height: 400px;
+            overflow-y: auto;
+            background-color: #f9fafb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-size: 0.875rem;
+        }
+        
+        /* 日志项 */
+        .log-item {
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .log-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        /* 数据项 */
+        .data-item {
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .data-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        /* 数据项颜色标记 */
+        .data-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 0.5rem;
+        }
+        
+        /* 卡片头部 */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        /* 头部样式 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+        
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* 文本样式 */
+        .text-sm {
+            font-size: 0.875rem;
+        }
+        
+        .text-gray-500 {
+            color: #6b7280;
+        }
+        
+        .text-gray-600 {
+            color: #4b5563;
+        }
+        
+        .text-blue-600 {
+            color: #2563eb;
+        }
+        
+        .text-green-600 {
+            color: #059669;
+        }
+        
+        .italic {
+            font-style: italic;
+        }
+        
+        /* 清除按钮 */
+        .clear-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .clear-btn:hover {
+            color: #4b5563;
+        }
+        
+        /* 控制指令区域 */
+        .control-section {
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 标题和状态 -->
+        <div class="card">
+            <div class="header">
+                <div class="header-left">
+                    <div class="icon icon-rocket">
+                        <span></span>
+                    </div>
+                    <h1>仿真进程控制面板</h1>
+                </div>
+                <div class="header-right">
+                    <span id="status-indicator" class="status-indicator status-stopped"></span>
+                    <span id="status-text" class="text-gray-600">已停止</span>
+                </div>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-card info-card-blue">
+                    <h3>当前状态</h3>
+                    <div class="info-value" id="current-status">已停止</div>
+                </div>
+                <div class="info-card info-card-green">
+                    <h3>已发送消息数</h3>
+                    <div class="info-value" id="sent-count">0</div>
+                </div>
+                <div class="info-card info-card-purple">
+                    <h3>总节点数量</h3>
+                    <div class="info-value" id="total-nodes">*</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 控制按钮 -->
+        <div class="card">
+            <h2>控制指令</h2>
+            <div class="control-buttons">
+                <button id="start-btn" class="btn btn-green">
+                    <div class="icon icon-play"></div>
+                    开始运行
+                </button>
+                <button id="pause-btn" class="btn btn-yellow" disabled>
+                    <div class="icon icon-pause"></div>
+                    暂停运行
+                </button>
+                <button id="resume-btn" class="btn btn-blue" disabled>
+                    <div class="icon icon-resume"></div>
+                    继续运行
+                </button>
+                <button id="stop-btn" class="btn btn-red" disabled>
+                    <div class="icon icon-stop"></div>
+                    停止运行
+                </button>
+            </div>
+        </div>
+        
+        <!-- 信息显示区域 -->
+        <div class="grid">
+            <!-- 日志信息 -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="icon icon-file"></div>
+                        <h2>日志信息</h2>
+                    </div>
+                    <button id="clear-log-btn" class="clear-btn">
+                        <div class="icon icon-trash"></div>
+                        清空
+                    </button>
+                </div>
+                <div id="log-container" class="log-container">
+                    <div class="log-item text-gray-500 italic">等待脚本启动...</div>
+                </div>
+            </div>
+            
+            <!-- 数据反馈 -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="icon icon-file"></div>
+                        <h2>数据反馈</h2>
+                    </div>
+                    <button id="clear-data-btn" class="clear-btn">
+                        <div class="icon icon-trash"></div>
+                        清空
+                    </button>
+                </div>
+                <div id="data-container" class="data-container">
+                    <div class="text-gray-500 italic">等待数据...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script>
+        // 全局变量
+        let isRunning = false;
+        let isPaused = false;
+        let autoRefreshInterval = null;
+        let sentMessages = 0;
+        let totalNodes = 0;
+        let dataFeedback = [];
+        
+        // 颜色数组用于数据反馈
+        const dataColors = [
+            '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+            '#ec4899', '#6366f1', '#14b8a6', '#f97316', '#84cc16'
+        ];
+        
+        // 更新状态
+        function updateStatus(status, message = "") {
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            const currentStatus = document.getElementById('current-status');
+            
+            if (status === 'running') {
+                isRunning = true;
+                isPaused = false;
+                statusIndicator.className = 'status-indicator status-running';
+                statusText.textContent = '运行中';
+                statusText.className = 'text-sm font-medium text-green-600';
+                currentStatus.textContent = '运行中';
+                
+                // 更新按钮状态
+                document.getElementById('start-btn').disabled = true;
+                document.getElementById('pause-btn').disabled = false;
+                document.getElementById('resume-btn').disabled = true;
+                document.getElementById('stop-btn').disabled = false;
+            } else if (status === 'paused') {
+                isRunning = false;
+                isPaused = true;
+                statusIndicator.className = 'status-indicator status-paused';
+                statusText.textContent = '已暂停';
+                statusText.className = 'text-sm font-medium text-yellow-600';
+                currentStatus.textContent = '已暂停';
+                
+                // 更新按钮状态
+                document.getElementById('start-btn').disabled = true;
+                document.getElementById('pause-btn').disabled = true;
+                document.getElementById('resume-btn').disabled = false;
+                document.getElementById('stop-btn').disabled = false;
+            } else {
+                isRunning = false;
+                isPaused = false;
+                statusIndicator.className = 'status-indicator status-stopped';
+                statusText.textContent = '已停止';
+                statusText.className = 'text-sm font-medium text-gray-600';
+                currentStatus.textContent = '已停止';
+                
+                // 更新按钮状态
+                document.getElementById('start-btn').disabled = false;
+                document.getElementById('pause-btn').disabled = true;
+                document.getElementById('resume-btn').disabled = true;
+                document.getElementById('stop-btn').disabled = true;
+            }
+            
+            if (message) {
+                addLog(message, new Date().toLocaleString());
+            }
+        }
+        
+        // 更新已发送消息数
+        function updateSentCount(count) {
+            sentMessages = count;
+            document.getElementById('sent-count').textContent = count;
+        }
+        
+        // 更新总节点数量
+        function updateTotalNodes(count) {
+            totalNodes = count;
+            document.getElementById('total-nodes').textContent = count > 0 ? count : '*';
+        }
+        
+        // 添加日志
+        function addLog(message, timestamp) {
+            const logContainer = document.getElementById('log-container');
+            
+            // 移除初始提示
+            if (logContainer.children.length === 1 && logContainer.children[0].textContent.trim() === '等待脚本启动...') {
+                logContainer.innerHTML = '';
+            }
+            
+            // 只添加关键日志信息，避免过多日志导致卡顿
+            if (message.includes('[stdout]') || message.includes('===') || message.includes('任务已') || message.includes('发送成功') || message.includes('发送失败') || message.includes('本次任务结束')) {
+                // 移除[stdout]前缀
+                let displayMessage = message.replace('[stdout]', '').trim();
+                
+                // 移除重复的换行
+                displayMessage = displayMessage.replace(/\n+/g, '\n');
+                
+                const logItem = document.createElement('div');
+                logItem.className = 'log-item';
+                logItem.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <span class="text-gray-700">${displayMessage}</span>
+                        <span class="text-xs text-gray-500 ml-2">${timestamp}</span>
+                    </div>
+                `;
+                
+                logContainer.appendChild(logItem);
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+        }
+        
+        // 从日志中提取已发送消息数 - 简化版本，不再添加数据反馈
+        // 现在主要依赖WebSocket和HTTP端点获取准确的状态信息
+        function extractSentCountFromLog(logMessage) {
+            // 不再从日志中提取已发送消息数和添加数据反馈
+            // 完全依赖服务器通过WebSocket和HTTP提供的状态更新
+        }
+        
+        // 获取相对时间 - 现在从服务器获取，不再使用本地时间
+        function getRelativeTime() {
+            // 这个函数现在不再使用，相对时间直接从服务器获取
+            return "0.00";
+        }
+        
+        // 添加数据反馈
+        function addDataFeedback(sentCount, relativeTime) {
+            const dataContainer = document.getElementById('data-container');
+            
+            // 移除初始提示
+            if (dataContainer.children.length === 1 && dataContainer.children[0].textContent.trim() === '等待数据...') {
+                dataContainer.innerHTML = '';
+            }
+            
+            // 确保sentCount是有效数字
+            const validSentCount = typeof sentCount === 'number' && !isNaN(sentCount) ? sentCount : 0;
+            
+            // 优化：只添加整百的消息数，避免过多DOM操作
+            if (validSentCount % 100 === 0) {
+                // 创建数据项
+                const dataItem = document.createElement('div');
+                dataItem.className = 'data-item';
+                
+                // 随机颜色
+                const colorIndex = Math.floor(Math.random() * dataColors.length);
+                const color = dataColors[colorIndex];
+                
+                dataItem.innerHTML = `
+                    <div style="display: flex; align-items: center;">
+                        <div class="data-color" style="background-color: ${color};"></div>
+                        发送消息数量：${validSentCount}条
+                    </div>
+                    <div>
+                        相对时间：${relativeTime}
+                    </div>
+                `;
+                
+                // 添加到数据容器末尾，保持与日志信息相同的向下滚动风格
+                dataContainer.appendChild(dataItem);
+                dataContainer.scrollTop = dataContainer.scrollHeight;
+                
+                // 限制数据项数量，优化性能
+                if (dataContainer.children.length > 20) {
+                    dataContainer.removeChild(dataContainer.firstChild);
+                }
+            }
+        }
+        
+        // 清空日志
+        function clearLog() {
+            const logContainer = document.getElementById('log-container');
+            logContainer.innerHTML = '<div class="text-gray-500 italic">日志已清空</div>';
+        }
+        
+        // 清空数据反馈
+        function clearData() {
+            const dataContainer = document.getElementById('data-container');
+            dataContainer.innerHTML = '<div class="text-gray-500 italic">数据已清空</div>';
+        }
+        
+        // 启动任务
+        async function runTask() {
+            const startBtn = document.getElementById('start-btn');
+            
+            startBtn.disabled = true;
+            startBtn.innerHTML = '<div class="icon icon-play"></div>启动中...';
+            
+            try {
+                const res = await fetch('/run-task', { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.error) {
+                    addLog(`错误: ${data.error}`, new Date().toLocaleString());
+                    updateStatus('stopped', `启动失败: ${data.error}`);
+                } else if (data.status === 'started') {
+                    addLog(data.message, new Date().toLocaleString());
+                    updateStatus('running', '任务已启动');
+                    
+                    // 启动新任务时清空数据反馈
+                    clearData();
+                    // 重置上一次发送数量
+                    lastSentCount = 0;
+                    
+                    // 不再自动刷新日志，完全依赖WebSocket推送
+                }
+            } catch (err) {
+                addLog(`请求失败: ${err.message}`, new Date().toLocaleString());
+                updateStatus('stopped', `请求失败: ${err.message}`);
+            } finally {
+                startBtn.innerHTML = '<div class="icon icon-play"></div>开始运行';
+                startBtn.disabled = false;
+            }
+        }
+        
+        // 暂停任务
+        async function pauseTask() {
+            const pauseBtn = document.getElementById('pause-btn');
+            pauseBtn.disabled = true;
+            pauseBtn.innerHTML = '<div class="icon icon-pause"></div>暂停中...';
+            
+            try {
+                let success = false;
+                
+                // 优先通过WebSocket发送暂停命令
+                if (window.socket && window.socket.readyState === WebSocket.OPEN) {
+                    window.socket.send(JSON.stringify({ command: 'pause' }));
+                    addLog('暂停命令已发送', new Date().toLocaleString());
+                    success = true;
+                } 
+                // 备选方案：通过HTTP请求暂停任务
+                else {
+                    addLog('WebSocket未连接，尝试通过HTTP请求暂停任务', new Date().toLocaleString());
+                    const res = await fetch('/pause-task', { method: 'POST' });
+                    const data = await res.json();
+                    
+                    if (data.status === 'paused') {
+                        addLog('HTTP暂停请求成功', new Date().toLocaleString());
+                        updateStatus('paused', data.message);
+                        success = true;
+                    } else if (data.status !== 'error') {
+                        addLog('HTTP暂停请求成功', new Date().toLocaleString());
+                        updateStatus('paused', data.message);
+                        success = true;
+                    } else {
+                        addLog(`HTTP暂停请求失败: ${data.message}`, new Date().toLocaleString());
+                    }
+                }
+                
+                // 不再刷新日志，完全依赖WebSocket推送
+            } catch (err) {
+                addLog(`暂停请求失败: ${err.message}`, new Date().toLocaleString());
+            } finally {
+                pauseBtn.innerHTML = '<div class="icon icon-pause"></div>暂停运行';
+                // 不立即启用按钮，等待状态更新
+            }
+        }
+        
+        // 继续任务
+        async function resumeTask() {
+            const resumeBtn = document.getElementById('resume-btn');
+            resumeBtn.disabled = true;
+            resumeBtn.innerHTML = '<div class="icon icon-resume"></div>继续中...';
+            
+            try {
+                let success = false;
+                
+                // 优先通过WebSocket发送继续命令
+                if (window.socket && window.socket.readyState === WebSocket.OPEN) {
+                    window.socket.send(JSON.stringify({ command: 'resume' }));
+                    addLog('继续命令已发送', new Date().toLocaleString());
+                    success = true;
+                } 
+                // 备选方案：通过HTTP请求继续任务
+                else {
+                    addLog('WebSocket未连接，尝试通过HTTP请求继续任务', new Date().toLocaleString());
+                    const res = await fetch('/resume-task', { method: 'POST' });
+                    const data = await res.json();
+                    
+                    if (data.status === 'running') {
+                        addLog('HTTP继续请求成功', new Date().toLocaleString());
+                        updateStatus('running', data.message);
+                        success = true;
+                    } else if (data.status !== 'error') {
+                        addLog('HTTP继续请求成功', new Date().toLocaleString());
+                        updateStatus('running', data.message);
+                        success = true;
+                    } else {
+                        addLog(`HTTP继续请求失败: ${data.message}`, new Date().toLocaleString());
+                    }
+                }
+                
+                // 不再刷新日志，完全依赖WebSocket推送
+            } catch (err) {
+                addLog(`继续请求失败: ${err.message}`, new Date().toLocaleString());
+            } finally {
+                resumeBtn.innerHTML = '<div class="icon icon-resume"></div>继续运行';
+                // 不立即启用按钮，等待状态更新
+            }
+        }
+        
+        // 停止任务
+        async function stopTask() {
+            const stopBtn = document.getElementById('stop-btn');
+            stopBtn.disabled = true;
+            stopBtn.innerHTML = '<div class="icon icon-stop"></div>停止中...';
+            
+            try {
+                let success = false;
+                
+                // 优先通过WebSocket发送停止命令
+                if (window.socket && window.socket.readyState === WebSocket.OPEN) {
+                    window.socket.send(JSON.stringify({ command: 'stop' }));
+                    addLog('停止命令已发送', new Date().toLocaleString());
+                    success = true;
+                } 
+                // 备选方案：通过HTTP请求停止任务
+                else {
+                    addLog('WebSocket未连接，尝试通过HTTP请求停止任务', new Date().toLocaleString());
+                    const res = await fetch('/stop-task', { method: 'POST' });
+                    const data = await res.json();
+                    
+                    if (data.status === 'stopped') {
+                        addLog('HTTP停止请求成功', new Date().toLocaleString());
+                        updateStatus('stopped', data.message);
+                        success = true;
+                    } else if (data.status !== 'error') {
+                        addLog('HTTP停止请求成功', new Date().toLocaleString());
+                        updateStatus('stopped', data.message);
+                        success = true;
+                    } else {
+                        addLog(`HTTP停止请求失败: ${data.message}`, new Date().toLocaleString());
+                    }
+                }
+                
+                // 不再刷新日志，完全依赖WebSocket推送
+            } catch (err) {
+                addLog(`停止请求失败: ${err.message}`, new Date().toLocaleString());
+            } finally {
+                stopBtn.innerHTML = '<div class="icon icon-stop"></div>停止运行';
+                // 不立即启用按钮，等待状态更新
+            }
+        }
+        
+        // 刷新日志功能：获取最新状态和日志信息
+        async function refreshLogs() {
+            addLog('正在刷新日志和状态...', new Date().toLocaleString());
+            
+            // 获取当前状态
+            await fetchCurrentStatus();
+            
+            // 检查WebSocket连接状态，如果断开则重新连接
+            if (!window.socket || window.socket.readyState !== WebSocket.OPEN) {
+                addLog('WebSocket连接已断开，正在重新连接...', new Date().toLocaleString());
+                connectWebSocket();
+            } else {
+                // 发送状态查询请求
+                window.socket.send(JSON.stringify({ command: 'get_status' }));
+                addLog('已发送状态查询请求', new Date().toLocaleString());
+            }
+        }
+        
+        // 自动刷新功能已移除
+        function startAutoRefresh() {
+            console.log('自动刷新功能已移除');
+        }
+        
+        // 停止自动刷新功能已移除
+        function stopAutoRefresh() {
+            console.log('停止自动刷新功能已移除');
+        }
+        
+        // 建立WebSocket连接
+        let reconnectTimer = null;
+        function connectWebSocket() {
+            // 清除之前的重连定时器
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+            }
+            
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+            
+            // 如果已有连接且状态为打开，则不创建新连接
+            if (window.socket && (window.socket.readyState === WebSocket.OPEN || window.socket.readyState === WebSocket.CONNECTING)) {
+                console.log('WebSocket连接已存在，无需重新连接');
+                return window.socket;
+            }
+            
+            window.socket = new WebSocket(wsUrl);
+            
+            window.socket.onopen = function(event) {
+                console.log('WebSocket连接已建立');
+                addLog('WebSocket连接已建立', new Date().toLocaleString());
+            };
+            
+            window.socket.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                console.log('收到WebSocket消息:', data);
+                
+                // 处理状态更新
+                if (data.type === 'status') {
+                    // 正确处理running、paused、stopped三种状态
+                    let statusToUse = 'stopped';
+                    if (data.status === 'running') {
+                        statusToUse = 'running';
+                    } else if (data.status === 'paused') {
+                        statusToUse = 'paused';
+                    }
+                    updateStatus(statusToUse);
+                    updateSentCount(data.sent_count);
+                    updateTotalNodes(data.total_nodes);
+                } 
+                // 处理实时数据反馈
+                else if (data.type === 'real_time_data') {
+                    // 只在发送数量为整百时才添加数据反馈，避免重复发送
+                    if (data.sent_count > 0 && data.sent_count % 100 === 0 && data.sent_count !== lastSentCount) {
+                        // 使用服务器返回的relative_time字段作为相对仿真时间
+                        // 确保使用正确的相对仿真时间，而不是默认值
+                        const relativeTime = typeof data.relative_time === 'number' ? data.relative_time : (data.simulation_relative_time || 0.0);
+                        addDataFeedback(data.sent_count, relativeTime.toFixed(2));
+                        lastSentCount = data.sent_count; // 更新上一次发送数量
+                    }
+                    
+                    // 如果有日志行，添加到日志
+                    if (data.log_line) {
+                        addLog(data.log_line, new Date().toLocaleString());
+                        
+                        // 解析总节点数量
+                        if (data.log_line.includes('总节点数量:')) {
+                            const match = data.log_line.match(/总节点数量:\s*(\d+)/);
+                            if (match && match[1]) {
+                                const nodes = parseInt(match[1]);
+                                updateTotalNodes(nodes);
+                            }
+                        }
+                    }
+                } 
+                // 处理命令响应
+                else if (data.type === 'response') {
+                    // 处理各种命令响应
+                    addLog(data.message, new Date().toLocaleString());
+                    
+                    // 对于停止命令，立即刷新日志确保状态更新
+                    if (data.command === 'stop') {
+                        refreshLogs();
+                    }
+                }
+                // 处理心跳响应
+                else if (data.type === 'pong') {
+                    // 心跳响应，无需特殊处理
+                }
+            } catch (error) {
+                console.error('WebSocket消息解析失败:', error);
+            }
+        };
+            
+            window.socket.onclose = function(event) {
+                console.log('WebSocket连接已关闭');
+                addLog('WebSocket连接已关闭', new Date().toLocaleString());
+                // 尝试重新连接
+                reconnectTimer = setTimeout(connectWebSocket, 5000);
+            };
+            
+            window.socket.onerror = function(error) {
+                console.error('WebSocket错误:', error);
+                addLog('WebSocket连接错误', new Date().toLocaleString());
+            };
+            
+            return window.socket;
+        }
+        
+        // 记录上一次的数据反馈信息，避免重复发送
+        let lastSentCount = 0;
+        
+        // 定期获取当前状态，更新相对仿真时间
+        async function fetchCurrentStatus() {
+            try {
+                const res = await fetch('/get-status');
+                const data = await res.json();
+                
+                // 更新状态
+                let statusToUse = 'stopped';
+                if (data.status === 'running') {
+                    statusToUse = 'running';
+                } else if (data.status === 'paused') {
+                    statusToUse = 'paused';
+                }
+                updateStatus(statusToUse);
+                updateSentCount(data.sent_count);
+                
+                // 只有在运行状态下才添加数据反馈，避免已停止状态下仍显示新数据
+                // 且只有当发送消息数量变化且为整百时才添加数据反馈
+                if ((statusToUse === 'running' || statusToUse === 'paused') && 
+                    data.sent_count > 0 && 
+                    data.sent_count !== lastSentCount && 
+                    data.sent_count % 100 === 0) {
+                    addDataFeedback(data.sent_count, data.relative_time.toFixed(2));
+                    lastSentCount = data.sent_count; // 更新上一次发送数量
+                }
+            } catch (err) {
+                console.error('获取状态失败:', err);
+            }
+        }
+        
+        // 页面加载完成后，尝试获取现有日志并建立WebSocket连接
+        window.addEventListener('load', () => {
+            refreshLogs();
+            // 只连接一次WebSocket
+            if (!window.socket) {
+                connectWebSocket();
+            }
+            
+            // 定期获取状态（每3秒一次），确保相对仿真时间实时更新
+            setInterval(fetchCurrentStatus, 3000);
+        });
+        
+        // 添加按钮事件监听
+        document.getElementById('start-btn').addEventListener('click', runTask);
+        document.getElementById('pause-btn').addEventListener('click', pauseTask);
+        document.getElementById('resume-btn').addEventListener('click', resumeTask);
+        document.getElementById('stop-btn').addEventListener('click', stopTask);
+        document.getElementById('refresh-btn').addEventListener('click', refreshLogs);
+        document.getElementById('clear-log-btn').addEventListener('click', clearLog);
+        document.getElementById('clear-data-btn').addEventListener('click', clearData);
+    </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+dis_mq/
+
+# Logs
+logs/
+*.log
+
+# Data files
+*.json
+*.jsonl
+*.csv
+
+# Demo folder (uncomment if needed)
+# demo/
+
+# dis_recorders folder
+dis_recorders/
+
+# resources folder
+resources/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# RocketMQ
+rocketmq-client-cpp-*.deb
+rocketmq-client-cpp-*.rpm
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Local configuration
+.local
+.env
+
+# Docker related files
+Dockerfile
+Dockerfile.base
+docker-compose.yml
+docker-compose.base.yml
+DOCKER_COMPOSE_USAGE.md

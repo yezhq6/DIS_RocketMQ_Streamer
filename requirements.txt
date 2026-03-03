@@ -1,0 +1,18 @@
+# 核心依赖
+fastapi==0.123.0
+uvicorn==0.38.0
+rocketmq-client-python==2.0.0
+numpy==2.2.6
+
+# 辅助依赖
+pydantic==2.12.0
+websockets==15.0.1
+python-dotenv==1.2.0
+PyYAML==6.0
+psutil==7.2.2
+
+# 开发依赖
+# 用于格式化和类型检查
+# black==23.12.0
+# isort==5.13.2
+# mypy==1.8.0
